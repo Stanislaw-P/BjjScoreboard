@@ -14,111 +14,89 @@ namespace BjjScoreboard
         private int _matchDurationMinutes = 5;
         private bool _isRunning;
         private string _selectedGender = "Мужчины";
-        private string _weightInput = "-77"; 
+        private string _weightInput = "77";
+        private string _currentDiscipline = "BJJ";
 
         public FighterViewModel RedFighter { get; }
         public FighterViewModel BlueFighter { get; }
 
         public List<string> Genders { get; } = new List<string> { "Мужчины", "Женщины" };
-        public List<string> Teams { get; } = new List<string> { "", "Os Bagatar BJJ", "Динамо", "ФАТ", "Триумф", "РСО-Алания",
-            "Кабардино-Балкарская Республика", "Чеченская Республика", "Республика Дагестан"};
+        public List<string> Teams { get; } = new List<string> { "", "Berserker's Team", "Gracie Barra", "Alliance", "Checkmat", "Atos Jiu-Jitsu" };
 
         public string SelectedGender { get => _selectedGender; set { _selectedGender = value; OnPropertyChanged(); } }
-        public string WeightInput
+        public string WeightInput { get => _weightInput; set { _weightInput = value; OnPropertyChanged(); } }
+
+        public string CurrentDiscipline
         {
-            get => _weightInput;
-            set
-            {
-                _weightInput = value;
-                OnPropertyChanged();
-            }
+            get => _currentDiscipline;
+            set { _currentDiscipline = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsBjjActive)); OnPropertyChanged(nameof(IsFightingActive)); ResetMatch(); }
         }
+
+        public bool IsBjjActive => CurrentDiscipline == "BJJ";
+        public bool IsFightingActive => CurrentDiscipline == "FIGHTING";
+
         public int MatchDurationMinutes
         {
             get => _matchDurationMinutes;
-            set
-            {
-                if (value > 0 && value <= 60)
-                {
-                    _matchDurationMinutes = value;
-                    OnPropertyChanged();
-                    if (!IsRunning) ResetMatchTime();
-                }
-            }
+            set { if (value > 0 && value <= 60) { _matchDurationMinutes = value; OnPropertyChanged(); if (!IsRunning) ResetMatchTime(); } }
         }
 
         public string TimeDisplay => _timeRemaining.ToString(@"mm\:ss");
-
-        public bool IsRunning
-        {
-            get => _isRunning;
-            set
-            {
-                _isRunning = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TimerColor)); // Уведомляем об изменении цвета таймера
-            }
-        }
-
-        // Динамический цвет таймера: когда идет - белый, когда стоит - желтый
+        public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimerColor)); } }
         public string TimerColor => IsRunning ? "#FFFFFF" : "#FFCC00";
 
-        public ICommand ModifyMatchDurationCmd { get; } // Команда для кнопок + и - времени
-        public ICommand StartCommand { get; }
-        public ICommand PauseCommand { get; }
+        public ICommand ModifyMatchDurationCmd { get; }
         public ICommand TogglePauseCommand { get; }
         public ICommand ResetCommand { get; }
+        public ICommand SwitchDisciplineCmd { get; }
 
         public MainViewModel()
         {
-            RedFighter = new FighterViewModel(true, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
-            BlueFighter = new FighterViewModel(false, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
+            RedFighter = new FighterViewModel(true, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic, () => CheckFullIppon());
+            BlueFighter = new FighterViewModel(false, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic, () => CheckFullIppon());
 
             ResetMatchTime();
-
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += Timer_Tick;
 
             ModifyMatchDurationCmd = new RelayCommand(p => MatchDurationMinutes += Convert.ToInt32(p));
-            StartCommand = new RelayCommand(_ => StartTimer());
-            PauseCommand = new RelayCommand(_ => PauseTimer());
             TogglePauseCommand = new RelayCommand(_ => ToggleTimer());
             ResetCommand = new RelayCommand(_ => ResetMatch());
+            SwitchDisciplineCmd = new RelayCommand(p => CurrentDiscipline = p.ToString());
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (_timeRemaining > TimeSpan.Zero)
-            {
-                _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1));
-                OnPropertyChanged(nameof(TimeDisplay));
-            }
-            else
-            {
-                _timer.Stop();
-                IsRunning = false;
-                DetermineWinnerByPoints();
-            }
+            if (_timeRemaining > TimeSpan.Zero) { _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1)); OnPropertyChanged(nameof(TimeDisplay)); }
+            else { _timer.Stop(); IsRunning = false; DetermineWinnerByPoints(); }
         }
 
-        private void StartTimer() { _timer.Start(); IsRunning = true; }
-        private void PauseTimer() { _timer.Stop(); IsRunning = false; }
-        private void ToggleTimer() { if (IsRunning) PauseTimer(); else StartTimer(); }
-
-        private void ResetMatchTime()
-        {
-            _timeRemaining = TimeSpan.FromMinutes(MatchDurationMinutes);
-            OnPropertyChanged(nameof(TimeDisplay));
-        }
+        private void ToggleTimer() { if (IsRunning) { _timer.Stop(); IsRunning = false; } else { _timer.Start(); IsRunning = true; } }
+        private void ResetMatchTime() { _timeRemaining = TimeSpan.FromMinutes(MatchDurationMinutes); OnPropertyChanged(nameof(TimeDisplay)); }
 
         private void ResetMatch()
         {
-            _timer.Stop();
-            IsRunning = false;
-            ResetMatchTime();
-            RedFighter.Reset();
-            BlueFighter.Reset();
+            _timer.Stop(); IsRunning = false; ResetMatchTime();
+            RedFighter.Reset(); BlueFighter.Reset();
+        }
+
+        private void CheckFullIppon()
+        {
+            if (CurrentDiscipline != "FIGHTING") return;
+
+            // Условие Full Ippon: есть Иппон в Part 1 И Part 2 И (любой из вариантов Part 3)
+            if (RedFighter.Part1Ippon && RedFighter.Part2Ippon && (RedFighter.Part3Ippon2Points || RedFighter.Part3Ippon3Points))
+                ExecuteFullIpponWin(RedFighter);
+            else if (BlueFighter.Part1Ippon && BlueFighter.Part2Ippon && (BlueFighter.Part3Ippon2Points || BlueFighter.Part3Ippon3Points))
+                ExecuteFullIpponWin(BlueFighter);
+        }
+
+        private void ExecuteFullIpponWin(FighterViewModel winner)
+        {
+            _timer.Stop(); IsRunning = false;
+            FighterViewModel loser = (winner == RedFighter) ? BlueFighter : RedFighter;
+            winner.Points = 50; loser.Points = 0;
+            ApplyColors(winner);
         }
 
         private void ThisFighterPenalized(bool isRed)
@@ -126,68 +104,61 @@ namespace BjjScoreboard
             FighterViewModel offender = isRed ? RedFighter : BlueFighter;
             FighterViewModel opponent = isRed ? BlueFighter : RedFighter;
 
-            switch (offender.Penalties)
+            if (CurrentDiscipline == "BJJ")
             {
-                case 2: opponent.Advantages += 1; break;
-                case 3: opponent.Points += 2; break;
-                case 4: ExecuteDqLogic(offender); break;
+                switch (offender.Penalties)
+                {
+                    case 2: opponent.Advantages += 1; break;
+                    case 3: opponent.Points += 2; break;
+                    case 4: ExecuteDqLogic(offender); break;
+                }
+            }
+            else // Регламент JJIF Fighting System (Наказания добавляют очки оппоненту)
+            {
+                switch (offender.Penalties)
+                {
+                    case 1: opponent.Points += 1; break;
+                    case 2: opponent.Points += 2; break;
+                    case 3: opponent.Points += 3; break;
+                    case 4: ExecuteDqLogic(offender); break;
+                }
             }
         }
 
         private void ExecuteSubLogic(FighterViewModel submissionWinner)
         {
-            _timer.Stop();
-            IsRunning = false;
+            _timer.Stop(); IsRunning = false;
             FighterViewModel loser = (submissionWinner == RedFighter) ? BlueFighter : RedFighter;
-            submissionWinner.Points = 50;
-            loser.Points = 0;
+            submissionWinner.Points = 50; loser.Points = 0;
             ApplyColors(submissionWinner);
         }
 
         private void ExecuteDqLogic(FighterViewModel penalizedFighter)
         {
-            _timer.Stop();
-            IsRunning = false;
+            _timer.Stop(); IsRunning = false;
             FighterViewModel winner = (penalizedFighter == RedFighter) ? BlueFighter : RedFighter;
-            penalizedFighter.Points = 0;
-            winner.Points = 50;
-            ApplyColors(winner);
-        }
-
-        private void DeclareWinner(FighterViewModel winner)
-        {
-            _timer.Stop();
-            IsRunning = false;
+            penalizedFighter.Points = 0; winner.Points = 50;
             ApplyColors(winner);
         }
 
         private void ApplyColors(FighterViewModel winner)
         {
-            if (winner == RedFighter)
-            {
-                RedFighter.RowBackground = "#24A148";
-                BlueFighter.RowBackground = "#393939";
-            }
-            else
-            {
-                BlueFighter.RowBackground = "#24A148";
-                RedFighter.RowBackground = "#393939";
-            }
+            if (winner == RedFighter) { RedFighter.RowBackground = "#24A148"; BlueFighter.RowBackground = "#393939"; }
+            else { BlueFighter.RowBackground = "#24A148"; RedFighter.RowBackground = "#393939"; }
         }
 
         private void DetermineWinnerByPoints()
         {
-            if (RedFighter.Points > BlueFighter.Points) DeclareWinner(RedFighter);
-            else if (BlueFighter.Points > RedFighter.Points) DeclareWinner(BlueFighter);
-            else if (RedFighter.Advantages > BlueFighter.Advantages) DeclareWinner(RedFighter);
-            else if (BlueFighter.Advantages > RedFighter.Advantages) DeclareWinner(BlueFighter);
-            else if (RedFighter.Penalties < BlueFighter.Penalties) DeclareWinner(RedFighter);
-            else if (BlueFighter.Penalties < RedFighter.Penalties) DeclareWinner(BlueFighter);
+            if (RedFighter.Points > BlueFighter.Points) ApplyColors(RedFighter);
+            else if (BlueFighter.Points > RedFighter.Points) ApplyColors(BlueFighter);
+            else if (RedFighter.Advantages > BlueFighter.Advantages) ApplyColors(RedFighter);
+            else if (BlueFighter.Advantages > RedFighter.Advantages) ApplyColors(BlueFighter);
+            else if (RedFighter.Penalties < BlueFighter.Penalties) ApplyColors(RedFighter);
+            else if (BlueFighter.Penalties < RedFighter.Penalties) ApplyColors(BlueFighter);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        protected void OnPropertyChanged([CallerMemberName] string name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
     public class FighterViewModel : INotifyPropertyChanged
@@ -198,10 +169,12 @@ namespace BjjScoreboard
         private int _advantages;
         private int _penalties;
         private string _rowBackground = "#172637";
+        private bool _p1, _p2, _p3_2, _p3_3;
 
         private readonly Action<bool> _onPenaltyChanged;
         private readonly Action<FighterViewModel> _onSubTriggered;
         private readonly Action<FighterViewModel> _onDqTriggered;
+        private readonly Action _onStateChanged;
         private readonly bool _isRed;
 
         public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
@@ -211,18 +184,37 @@ namespace BjjScoreboard
         public int Penalties { get => _penalties; set { _penalties = Math.Max(0, value); OnPropertyChanged(); } }
         public string RowBackground { get => _rowBackground; set { _rowBackground = value; OnPropertyChanged(); } }
 
+        // Связываем переключатели Иппонов с автоматическим изменением очков на табло (+2 или +3)
+        public bool Part1Ippon
+        {
+            get => _p1;
+            set { if (_p1 != value) { _p1 = value; Points += value ? 2 : -2; OnPropertyChanged(); _onStateChanged(); } }
+        }
+        public bool Part2Ippon
+        {
+            get => _p2;
+            set { if (_p2 != value) { _p2 = value; Points += value ? 2 : -2; OnPropertyChanged(); _onStateChanged(); } }
+        }
+        public bool Part3Ippon2Points
+        {
+            get => _p3_2;
+            set { if (_p3_2 != value) { _p3_2 = value; Points += value ? 2 : -2; OnPropertyChanged(); _onStateChanged(); } }
+        }
+        public bool Part3Ippon3Points
+        {
+            get => _p3_3;
+            set { if (_p3_3 != value) { _p3_3 = value; Points += value ? 3 : -3; OnPropertyChanged(); _onStateChanged(); } }
+        }
+
         public ICommand ModifyPointsCmd { get; }
         public ICommand ModifyAdvantagesCmd { get; }
         public ICommand ModifyPenaltiesCmd { get; }
         public ICommand WinBySubCmd { get; }
         public ICommand WinByDqCmd { get; }
 
-        public FighterViewModel(bool isRed, Action<bool> onPenaltyChanged, Action<FighterViewModel> onSubTriggered, Action<FighterViewModel> onDqTriggered)
+        public FighterViewModel(bool isRed, Action<bool> onPenaltyChanged, Action<FighterViewModel> onSubTriggered, Action<FighterViewModel> onDqTriggered, Action onStateChanged)
         {
-            _isRed = isRed;
-            _onPenaltyChanged = onPenaltyChanged;
-            _onSubTriggered = onSubTriggered;
-            _onDqTriggered = onDqTriggered;
+            _isRed = isRed; _onPenaltyChanged = onPenaltyChanged; _onSubTriggered = onSubTriggered; _onDqTriggered = onDqTriggered; _onStateChanged = onStateChanged;
 
             ModifyPointsCmd = new RelayCommand(p => Points += Convert.ToInt32(p));
             ModifyAdvantagesCmd = new RelayCommand(p => Advantages += Convert.ToInt32(p));
@@ -231,32 +223,20 @@ namespace BjjScoreboard
                 if (diff > 0 && Penalties < 4) { Penalties++; _onPenaltyChanged(_isRed); }
                 else if (diff < 0) { Penalties--; }
             });
-
             WinBySubCmd = new RelayCommand(_ => _onSubTriggered(this));
             WinByDqCmd = new RelayCommand(_ => _onDqTriggered(this));
         }
 
         public void Reset()
         {
-            Name = "";      // Сброс имени
-            Team = "";      // Сброс клуба
-            Points = 0;
-            Advantages = 0;
-            Penalties = 0;
+            Name = ""; Team = ""; _points = 0; Advantages = 0; Penalties = 0;
+            _p1 = false; _p2 = false; _p3_2 = false; _p3_3 = false;
             RowBackground = "#172637";
+            OnPropertyChanged(nameof(Points)); OnPropertyChanged(nameof(Part1Ippon));
+            OnPropertyChanged(nameof(Part2Ippon)); OnPropertyChanged(nameof(Part3Ippon2Points)); OnPropertyChanged(nameof(Part3Ippon3Points));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object> _execute;
-        public RelayCommand(Action<object> execute) => _execute = execute;
-        public bool CanExecute(object parameter) => true;
-        public void Execute(object parameter) => _execute(parameter);
-        public event EventHandler CanExecuteChanged { add { } remove { } }
+        protected void OnPropertyChanged([CallerMemberName] string name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

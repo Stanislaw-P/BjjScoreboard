@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace BjjScoreboard
 {
@@ -11,6 +12,13 @@ namespace BjjScoreboard
             InitializeComponent();
             this.DataContext = new MainViewModel();
             this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
+
+            // Назначаем фильтр веса
+            WeightBox.PreviewTextInput += WeightTextBox_PreviewTextInput;
+            WeightBox.KeyDown += TextBox_KeyDown;
+
+            // Слушаем все текстовые поля во вложенных элементах
+            EventManager.RegisterClassHandler(typeof(TextBox), TextBox.KeyDownEvent, new KeyEventHandler(TextBox_KeyDown));
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -20,10 +28,7 @@ namespace BjjScoreboard
             if (e.Key == Key.Space)
             {
                 var vm = this.DataContext as MainViewModel;
-                if (vm != null)
-                {
-                    vm.TogglePauseCommand.Execute(null);
-                }
+                if (vm != null) vm.TogglePauseCommand.Execute(null);
                 e.Handled = true;
             }
         }
@@ -34,7 +39,7 @@ namespace BjjScoreboard
             {
                 FocusManager.SetFocusedElement(this, null);
                 Keyboard.ClearFocus();
-                this.Focus(); // Передаем фокус окну, чтобы сразу работал пробел
+                this.Focus();
                 e.Handled = true;
             }
         }
@@ -45,16 +50,13 @@ namespace BjjScoreboard
             {
                 FocusManager.SetFocusedElement(this, null);
                 Keyboard.ClearFocus();
-                this.Focus(); // Передаем фокус окну, чтобы сразу работал пробел
+                this.Focus();
             }
         }
 
         private void WeightTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            // Разрешаем только цифры, минус и плюс
             bool isAllowed = char.IsDigit(e.Text[0]) || e.Text == "-" || e.Text == "+";
-
-            // Блокируем ввод, если символ не разрешен
             e.Handled = !isAllowed;
         }
     }
