@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -20,8 +22,7 @@ namespace BjjScoreboard
         public FighterViewModel BlueFighter { get; }
 
         public List<string> Genders { get; } = new List<string> { "Мужчины", "Женщины" };
-        public List<string> Teams { get; } = new List<string> { "", "Os Bagatar BJJ", "Динамо", "ФАТ", "Триумф", "РСО-Алания",
-            "Кабардино-Балкарская Республика", "Чеченская Республика", "Республика Дагестан"};
+        public List<string> Teams { get; private set; }
 
         public string SelectedGender { get => _selectedGender; set { _selectedGender = value; OnPropertyChanged(); } }
         public string WeightInput { get => _weightInput; set { _weightInput = value; OnPropertyChanged(); } }
@@ -63,6 +64,9 @@ namespace BjjScoreboard
 
         public MainViewModel()
         {
+            // Сначала загружаем команды из файла или дефолтные
+            LoadTeams();
+
             RedFighter = new FighterViewModel(true, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
             BlueFighter = new FighterViewModel(false, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
 
@@ -77,6 +81,48 @@ namespace BjjScoreboard
             PauseCommand = new RelayCommand(_ => PauseTimer());
             TogglePauseCommand = new RelayCommand(_ => ToggleTimer());
             ResetCommand = new RelayCommand(_ => ResetMatch());
+        }
+
+        private void LoadTeams()
+        {
+            // Список по умолчанию на случай отсутствия или поломки файла
+            var defaultTeams = new List<string>
+            {
+                "Os Bagatar BJJ", "Динамо", "ФАТ", "Триумф", "РСО-Алания",
+                "Кабардино-Балкарская Республика", "Чеченская Республика", "Республика Дагестан"
+            };
+
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "teams.json");
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    string jsonContent = File.ReadAllText(filePath);
+                    var parsedTeams = JsonSerializer.Deserialize<List<string>>(jsonContent);
+
+                    if (parsedTeams != null && parsedTeams.Count > 0)
+                    {
+                        Teams = parsedTeams;
+                    }
+                    else
+                    {
+                        Teams = defaultTeams;
+                    }
+                }
+                catch
+                {
+                    // В случае любой ошибки парсинга откатываемся на дефолтный список
+                    Teams = defaultTeams;
+                }
+            }
+            else
+            {
+                Teams = defaultTeams;
+            }
+
+            // Автоматически добавляем пустую строку в самое начало списка
+            Teams.Insert(0, "");
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -132,7 +178,7 @@ namespace BjjScoreboard
             IsRunning = false;
             FighterViewModel loser = (submissionWinner == RedFighter) ? BlueFighter : RedFighter;
             submissionWinner.Points = 50;
-            dynamicLoserPointsSet(loser);
+            loser.Points = 0;
             ApplyColors(submissionWinner);
         }
 
@@ -144,11 +190,6 @@ namespace BjjScoreboard
             penalizedFighter.Points = 0;
             winner.Points = 50;
             ApplyColors(winner);
-        }
-
-        private void dynamicLoserPointsSet(FighterViewModel loser)
-        {
-            loser.Points = 0;
         }
 
         private void DeclareWinner(FighterViewModel winner)
