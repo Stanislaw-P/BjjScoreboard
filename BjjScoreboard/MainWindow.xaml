@@ -37,7 +37,7 @@
                         <Button Content="+" Focusable="False" Command="{Binding RedFighter.ModifyAdvantagesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding RedFighter.ModifyAdvantagesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Преимущ." Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
+                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <Grid Grid.Column="2" Background="#FFCC00" Margin="0,0,5,0">
@@ -46,7 +46,7 @@
                         <Button Content="+" Focusable="False" Command="{Binding RedFighter.ModifyPenaltiesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding RedFighter.ModifyPenaltiesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Штрафы" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
+                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
@@ -91,7 +91,7 @@
                         <Button Content="+" Focusable="False" Command="{Binding BlueFighter.ModifyAdvantagesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding BlueFighter.ModifyAdvantagesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Преимущ." Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
+                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <Grid Grid.Column="2" Background="#FFCC00" Margin="0,0,5,0">
@@ -100,7 +100,7 @@
                         <Button Content="+" Focusable="False" Command="{Binding BlueFighter.ModifyPenaltiesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding BlueFighter.ModifyPenaltiesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Штрафы" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
+                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
