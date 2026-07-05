@@ -22,31 +22,31 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid Background="#DC143C">
-                    <TextBlock Text="{Binding RedFighter.Points}" Foreground="White" FontSize="110" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,35"/>
+                    <TextBlock Text="{Binding RedFighter.Points}" Foreground="White" FontSize="110" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
-                        <Button Content="+2" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="2" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="+3" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="3" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="+4" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="4" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="-1" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="-1" Width="32" Height="30" Margin="1" FontWeight="Bold" Background="#7F0000" Foreground="White"/>
+                        <Button Content="+2" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="2" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="+3" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="3" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="+4" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="4" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="-1" Focusable="False" Command="{Binding RedFighter.ModifyPointsCmd}" CommandParameter="-1" Width="35" Height="30" Margin="1" FontWeight="Bold" Background="#7F0000" Foreground="White"/>
                     </StackPanel>
                 </Grid>
 
                 <Grid Grid.Column="1" Background="#EEEEEE" Margin="5,0">
-                    <TextBlock Text="{Binding RedFighter.Advantages}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
+                    <TextBlock Text="{Binding RedFighter.Advantages}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,25"/>
+                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
                         <Button Content="+" Focusable="False" Command="{Binding RedFighter.ModifyAdvantagesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding RedFighter.ModifyAdvantagesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <Grid Grid.Column="2" Background="#FFCC00" Margin="0,0,5,0">
-                    <TextBlock Text="{Binding RedFighter.Penalties}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
+                    <TextBlock Text="{Binding RedFighter.Penalties}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,25"/>
+                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
                         <Button Content="+" Focusable="False" Command="{Binding RedFighter.ModifyPenaltiesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding RedFighter.ModifyPenaltiesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
@@ -55,12 +55,12 @@
                              Foreground="White" FontSize="48" FontWeight="Bold" 
                              Background="Transparent" BorderThickness="0" CaretBrush="White"/>
                     <ComboBox ItemsSource="{Binding Teams}" SelectedItem="{Binding RedFighter.Team}" Focusable="False"
-                              Width="300" FontSize="24" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
+                              Width="300" FontSize="20" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="10">
-                    <Button Content="SUBMISSION" Focusable="False" Command="{Binding RedFighter.WinBySubCmd}" Background="#24A148" Foreground="White" FontWeight="Bold" Height="35" Margin="0,0,0,5"/>
-                    <Button Content="DQ" Focusable="False" Command="{Binding RedFighter.WinByDqCmd}" Background="#DA1E28" Foreground="White" FontWeight="Bold" Height="35"/>
+                    <Button Content="SUBMISSION" Focusable="False" Command="{Binding RedFighter.WinBySubCmd}" Background="#24A148" Foreground="White" FontWeight="Bold" Height="40" Margin="0,0,0,8"/>
+                    <Button Content="DQ" Focusable="False" Command="{Binding RedFighter.WinByDqCmd}" Background="#DA1E28" Foreground="White" FontWeight="Bold" Height="40"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -76,31 +76,31 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid Background="#0F62FE">
-                    <TextBlock Text="{Binding BlueFighter.Points}" Foreground="White" FontSize="110" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,35"/>
+                    <TextBlock Text="{Binding BlueFighter.Points}" Foreground="White" FontSize="110" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
-                        <Button Content="+2" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="2" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="+3" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="3" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="+4" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="4" Width="32" Height="30" Margin="1" FontWeight="Bold"/>
-                        <Button Content="-1" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="-1" Width="32" Height="30" Margin="1" FontWeight="Bold" Background="#002D9C" Foreground="White"/>
+                        <Button Content="+2" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="2" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="+3" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="3" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="+4" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="4" Width="35" Height="30" Margin="1" FontWeight="Bold"/>
+                        <Button Content="-1" Focusable="False" Command="{Binding BlueFighter.ModifyPointsCmd}" CommandParameter="-1" Width="35" Height="30" Margin="1" FontWeight="Bold" Background="#002D9C" Foreground="White"/>
                     </StackPanel>
                 </Grid>
 
                 <Grid Grid.Column="1" Background="#EEEEEE" Margin="5,0">
-                    <TextBlock Text="{Binding BlueFighter.Advantages}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
+                    <TextBlock Text="{Binding BlueFighter.Advantages}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,25"/>
+                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
                         <Button Content="+" Focusable="False" Command="{Binding BlueFighter.ModifyAdvantagesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding BlueFighter.ModifyAdvantagesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Advantage" Foreground="#555" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <Grid Grid.Column="2" Background="#FFCC00" Margin="0,0,5,0">
-                    <TextBlock Text="{Binding BlueFighter.Penalties}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,30"/>
+                    <TextBlock Text="{Binding BlueFighter.Penalties}" Foreground="Black" FontSize="65" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,25"/>
+                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,5">
                         <Button Content="+" Focusable="False" Command="{Binding BlueFighter.ModifyPenaltiesCmd}" CommandParameter="1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                         <Button Content="-" Focusable="False" Command="{Binding BlueFighter.ModifyPenaltiesCmd}" CommandParameter="-1" Width="40" Height="30" Margin="2" FontWeight="Bold"/>
                     </StackPanel>
-                    <TextBlock Text="Penalty" Foreground="#222" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38"/>
                 </Grid>
 
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
@@ -109,12 +109,12 @@
                              Foreground="White" FontSize="48" FontWeight="Bold" 
                              Background="Transparent" BorderThickness="0" CaretBrush="White"/>
                     <ComboBox ItemsSource="{Binding Teams}" SelectedItem="{Binding BlueFighter.Team}" Focusable="False"
-                              Width="300" FontSize="24" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
+                              Width="300" FontSize="20" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="10">
-                    <Button Content="SUBMISSION" Focusable="False" Command="{Binding BlueFighter.WinBySubCmd}" Background="#24A148" Foreground="White" FontWeight="Bold" Height="35" Margin="0,0,0,5"/>
-                    <Button Content="DQ" Focusable="False" Command="{Binding BlueFighter.WinByDqCmd}" Background="#DA1E28" Foreground="White" FontWeight="Bold" Height="35"/>
+                    <Button Content="SUBMISSION" Focusable="False" Command="{Binding BlueFighter.WinBySubCmd}" Background="#24A148" Foreground="White" FontWeight="Bold" Height="40" Margin="0,0,0,8"/>
+                    <Button Content="DQ" Focusable="False" Command="{Binding BlueFighter.WinByDqCmd}" Background="#DA1E28" Foreground="White" FontWeight="Bold" Height="40"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -128,25 +128,25 @@
 
             <StackPanel VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <ComboBox ItemsSource="{Binding Genders}" SelectedItem="{Binding SelectedGender}" FontSize="18" Width="130" Margin="0,0,10,0"/>
+                    <ComboBox ItemsSource="{Binding Genders}" SelectedItem="{Binding SelectedGender}" FontSize="18" Width="140" Margin="0,0,10,0"/>
                     <TextBox Text="{Binding WeightInput, UpdateSourceTrigger=PropertyChanged}" 
-         KeyDown="TextBox_KeyDown" 
-         PreviewTextInput="WeightTextBox_PreviewTextInput" 
-         Foreground="White" FontSize="20" FontWeight="Bold" Background="#172637" BorderBrush="#393939" Width="60" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                             KeyDown="TextBox_KeyDown" 
+                             PreviewTextInput="WeightTextBox_PreviewTextInput" 
+                             Foreground="White" FontSize="20" FontWeight="Bold" Background="#172637" BorderBrush="#393939" Width="70" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                     <TextBlock Text=" кг" Foreground="White" FontSize="20" VerticalAlignment="Center" FontWeight="Bold"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="Сброс матча" Command="{Binding ResetCommand}" Focusable="False" Width="110" Height="35" Background="#393939" Foreground="White" FontWeight="Bold"/>
+                    <Button Content="Сброс матча" Command="{Binding ResetCommand}" Focusable="False" Width="120" Height="35" Background="#393939" Foreground="White" FontWeight="Bold"/>
                 </StackPanel>
             </StackPanel>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,40,0" HorizontalAlignment="Right">
                 <TextBlock Text="Время боя (мин):" Foreground="#8A99AD" FontSize="14" Margin="0,0,0,4" HorizontalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="-" Command="{Binding ModifyMatchDurationCmd}" CommandParameter="-1" Focusable="False" Width="30" Height="35" FontWeight="Bold" FontSize="18"/>
-                    <TextBlock Text="{Binding MatchDurationMinutes}" Foreground="White" FontSize="24" Width="50" TextAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <Button Content="+" Command="{Binding ModifyMatchDurationCmd}" CommandParameter="1" Focusable="False" Width="30" Height="35" FontWeight="Bold" FontSize="18"/>
+                    <Button Content="-" Command="{Binding ModifyMatchDurationCmd}" CommandParameter="-1" Focusable="False" Width="35" Height="35" FontWeight="Bold" FontSize="18"/>
+                    <TextBlock Text="{Binding MatchDurationMinutes}" Foreground="White" FontSize="24" Width="60" TextAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <Button Content="+" Command="{Binding ModifyMatchDurationCmd}" CommandParameter="1" Focusable="False" Width="35" Height="35" FontWeight="Bold" FontSize="18"/>
                 </StackPanel>
             </StackPanel>
 

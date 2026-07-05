@@ -14,7 +14,7 @@ namespace BjjScoreboard
         private int _matchDurationMinutes = 5;
         private bool _isRunning;
         private string _selectedGender = "Мужчины";
-        private string _weightInput = "-77"; 
+        private string _weightInput = "-77";
 
         public FighterViewModel RedFighter { get; }
         public FighterViewModel BlueFighter { get; }
@@ -24,15 +24,8 @@ namespace BjjScoreboard
             "Кабардино-Балкарская Республика", "Чеченская Республика", "Республика Дагестан"};
 
         public string SelectedGender { get => _selectedGender; set { _selectedGender = value; OnPropertyChanged(); } }
-        public string WeightInput
-        {
-            get => _weightInput;
-            set
-            {
-                _weightInput = value;
-                OnPropertyChanged();
-            }
-        }
+        public string WeightInput { get => _weightInput; set { _weightInput = value; OnPropertyChanged(); } }
+
         public int MatchDurationMinutes
         {
             get => _matchDurationMinutes;
@@ -56,14 +49,13 @@ namespace BjjScoreboard
             {
                 _isRunning = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(TimerColor)); // Уведомляем об изменении цвета таймера
+                OnPropertyChanged(nameof(TimerColor));
             }
         }
 
-        // Динамический цвет таймера: когда идет - белый, когда стоит - желтый
         public string TimerColor => IsRunning ? "#FFFFFF" : "#FFCC00";
 
-        public ICommand ModifyMatchDurationCmd { get; } // Команда для кнопок + и - времени
+        public ICommand ModifyMatchDurationCmd { get; }
         public ICommand StartCommand { get; }
         public ICommand PauseCommand { get; }
         public ICommand TogglePauseCommand { get; }
@@ -140,7 +132,7 @@ namespace BjjScoreboard
             IsRunning = false;
             FighterViewModel loser = (submissionWinner == RedFighter) ? BlueFighter : RedFighter;
             submissionWinner.Points = 50;
-            loser.Points = 0;
+            dynamicLoserPointsSet(loser);
             ApplyColors(submissionWinner);
         }
 
@@ -152,6 +144,11 @@ namespace BjjScoreboard
             penalizedFighter.Points = 0;
             winner.Points = 50;
             ApplyColors(winner);
+        }
+
+        private void dynamicLoserPointsSet(FighterViewModel loser)
+        {
+            loser.Points = 0;
         }
 
         private void DeclareWinner(FighterViewModel winner)
@@ -205,7 +202,7 @@ namespace BjjScoreboard
         private readonly bool _isRed;
 
         public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
-        public string Team { get => _team; set { _team = value; OnPropertyChanged(); } }
+        public string Team { get => _team; set { _team = value ?? ""; OnPropertyChanged(); } }
         public int Points { get => _points; set { _points = Math.Max(0, value); OnPropertyChanged(); } }
         public int Advantages { get => _advantages; set { _advantages = Math.Max(0, value); OnPropertyChanged(); } }
         public int Penalties { get => _penalties; set { _penalties = Math.Max(0, value); OnPropertyChanged(); } }
@@ -228,8 +225,15 @@ namespace BjjScoreboard
             ModifyAdvantagesCmd = new RelayCommand(p => Advantages += Convert.ToInt32(p));
             ModifyPenaltiesCmd = new RelayCommand(p => {
                 int diff = Convert.ToInt32(p);
-                if (diff > 0 && Penalties < 4) { Penalties++; _onPenaltyChanged(_isRed); }
-                else if (diff < 0) { Penalties--; }
+                if (diff > 0 && Penalties < 4)
+                {
+                    Penalties++;
+                    _onPenaltyChanged(_isRed);
+                }
+                else if (diff < 0 && Penalties > 0)
+                {
+                    Penalties--;
+                }
             });
 
             WinBySubCmd = new RelayCommand(_ => _onSubTriggered(this));
@@ -238,8 +242,8 @@ namespace BjjScoreboard
 
         public void Reset()
         {
-            Name = "";      // Сброс имени
-            Team = "";      // Сброс клуба
+            Name = "";
+            Team = "";
             Points = 0;
             Advantages = 0;
             Penalties = 0;
