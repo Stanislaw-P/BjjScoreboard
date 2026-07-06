@@ -52,10 +52,10 @@
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
                     <TextBox Text="{Binding RedFighter.Name, UpdateSourceTrigger=PropertyChanged}" 
                              KeyDown="TextBox_KeyDown"
-                             Foreground="White" FontSize="48" FontWeight="Bold" 
+                             Foreground="White" FontSize="56" FontWeight="Bold" 
                              Background="Transparent" BorderThickness="0" CaretBrush="White"/>
                     <ComboBox ItemsSource="{Binding Teams}" SelectedItem="{Binding RedFighter.Team}" Focusable="False"
-                              Width="300" FontSize="20" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
+                              Width="360" FontSize="26" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="10">
@@ -106,10 +106,10 @@
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
                     <TextBox Text="{Binding BlueFighter.Name, UpdateSourceTrigger=PropertyChanged}" 
                              KeyDown="TextBox_KeyDown"
-                             Foreground="White" FontSize="48" FontWeight="Bold" 
+                             Foreground="White" FontSize="56" FontWeight="Bold" 
                              Background="Transparent" BorderThickness="0" CaretBrush="White"/>
                     <ComboBox ItemsSource="{Binding Teams}" SelectedItem="{Binding BlueFighter.Team}" Focusable="False"
-                              Width="300" FontSize="20" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
+                              Width="360" FontSize="26" HorizontalAlignment="Left" Margin="0,5,0,0" Background="#172637" Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="10">
@@ -121,27 +121,34 @@
 
         <Grid Grid.Row="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <ComboBox ItemsSource="{Binding Genders}" SelectedItem="{Binding SelectedGender}" FontSize="18" Width="140" Margin="0,0,10,0"/>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <ComboBox ItemsSource="{Binding Genders}" SelectedItem="{Binding SelectedGender}" 
+                              FontSize="20" Width="150" Height="38" Margin="0,0,10,0"
+                              VerticalContentAlignment="Center"/>
+
                     <TextBox Text="{Binding WeightInput, UpdateSourceTrigger=PropertyChanged}" 
                              KeyDown="TextBox_KeyDown" 
                              PreviewTextInput="WeightTextBox_PreviewTextInput" 
-                             Foreground="White" FontSize="20" FontWeight="Bold" Background="#172637" BorderBrush="#393939" Width="70" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-                    <TextBlock Text=" кг" Foreground="White" FontSize="20" VerticalAlignment="Center" FontWeight="Bold"/>
+                             MaxLength="4"
+                             Foreground="White" FontSize="24" FontWeight="Bold" 
+                             Background="#172637" BorderBrush="#393939" Width="85" Height="38"
+                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text=" кг" Foreground="White" FontSize="22" VerticalAlignment="Center" FontWeight="Bold"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="Сброс матча" Command="{Binding ResetCommand}" Focusable="False" Width="120" Height="35" Background="#393939" Foreground="White" FontWeight="Bold"/>
+                    <Button Content="Сброс матча" Command="{Binding ResetCommand}" Focusable="False" Width="130" Height="38" Background="#393939" Foreground="White" FontWeight="Bold" FontSize="14"/>
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,40,0" HorizontalAlignment="Right">
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,50,0">
                 <TextBlock Text="Время боя (мин):" Foreground="#8A99AD" FontSize="14" Margin="0,0,0,4" HorizontalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal">
                     <Button Content="-" Command="{Binding ModifyMatchDurationCmd}" CommandParameter="-1" Focusable="False" Width="35" Height="35" FontWeight="Bold" FontSize="18"/>
@@ -150,7 +157,15 @@
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock Grid.Column="2" Text="{Binding TimeDisplay}" Foreground="{Binding TimerColor}" FontSize="96" FontWeight="Light" VerticalAlignment="Center" HorizontalAlignment="Right" FontFamily="Consolas"/>
+            <TextBlock Grid.Column="2" 
+                       Text="{Binding TimeDisplay}" 
+                       Foreground="{Binding TimerColor}" 
+                       FontSize="120" 
+                       FontWeight="Bold" 
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Right" 
+                       FontFamily="Consolas"
+                       Margin="0,0,0,15"/>
         </Grid>
     </Grid>
 </Window>
