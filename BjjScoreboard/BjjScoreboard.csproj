@@ -12,6 +12,7 @@
   <ItemGroup>
     <Content Include="kimono.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory Condition="'$(PublishSingleFile)' == 'true'">Never</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
@@ -21,6 +22,7 @@
     </None>
     <None Update="teams.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
   </ItemGroup>
 

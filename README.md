@@ -4,7 +4,7 @@
 
 ## Запуск из ZIP-архива
 
-Распакуйте `BjjScoreboard-win-x64.zip` и запустите `BjjScoreboard.exe` из распакованной папки. Архив предназначен для Windows x64 и уже включает среду .NET. Файл `teams.json` рядом с EXE можно редактировать для настройки списка команд.
+Распакуйте `BjjScoreboard-win-x64-single.zip` и запустите `BjjScoreboard.exe` из распакованной папки. Архив предназначен для Windows x64. Среда .NET включена в EXE, а файл `teams.json` рядом с ним можно редактировать для настройки списка команд.
 
 ## Запуск из исходников
 
@@ -18,12 +18,14 @@ dotnet run --project BjjScoreboard/BjjScoreboard.csproj
 
 ## Сборка ZIP-архива
 
-Выполните команды в PowerShell из корня репозитория. Первая команда публикует автономную Release-сборку, вторая упаковывает папку целиком.
+Выполните команды в PowerShell из корня репозитория, чтобы собрать автономный EXE и упаковать его вместе с `teams.json`.
 
 ```powershell
-dotnet publish BjjScoreboard/BjjScoreboard.csproj -c Release -r win-x64 --self-contained true -o artifacts/BjjScoreboard-win-x64
+$publishDir = 'artifacts/BjjScoreboard-win-x64-single'
+dotnet publish BjjScoreboard/BjjScoreboard.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw 'Не удалось собрать BJJ Scoreboard.' }
-Compress-Archive -Path artifacts/BjjScoreboard-win-x64 -DestinationPath artifacts/BjjScoreboard-win-x64.zip -CompressionLevel Optimal -Force
+$packageFiles = @("$publishDir/BjjScoreboard.exe", "$publishDir/teams.json")
+Compress-Archive -LiteralPath $packageFiles -DestinationPath "$publishDir.zip" -CompressionLevel Optimal -Force
 ```
 
 Готовый архив будет в папке `artifacts/`, которую Git игнорирует.
