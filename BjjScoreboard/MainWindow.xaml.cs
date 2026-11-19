@@ -20,8 +20,7 @@ namespace BjjScoreboard
 
             if (e.Key == Key.Space)
             {
-                var vm = this.DataContext as MainViewModel;
-                if (vm != null)
+                if (!e.IsRepeat && DataContext is MainViewModel vm)
                 {
                     vm.TogglePauseCommand.Execute(null);
                 }

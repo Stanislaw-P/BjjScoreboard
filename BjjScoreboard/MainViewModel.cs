@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -11,8 +12,13 @@ namespace BjjScoreboard
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private DispatcherTimer _timer;
-        private TimeSpan _timeRemaining;
+        private enum MatchPhase { Regulation, RegulationEnded, GoldenScore, Finished, GoldenScoreFinished }
+
+        private readonly DispatcherTimer _timer;
+        private readonly Stopwatch _clock = new();
+        private MatchPhase _phase;
+        private TimeSpan _regulationDuration;
+        private Action? _undoGoldenScoreResult;
         private int _matchDurationMinutes = 5;
         private bool _isRunning;
         private string _selectedGender = "Мужчины";
@@ -32,7 +38,7 @@ namespace BjjScoreboard
             get => _matchDurationMinutes;
             set
             {
-                if (value > 0 && value <= 60)
+                if (_phase == MatchPhase.Regulation && value > 0 && value <= 60)
                 {
                     _matchDurationMinutes = value;
                     OnPropertyChanged();
@@ -41,12 +47,27 @@ namespace BjjScoreboard
             }
         }
 
-        public string TimeDisplay => _timeRemaining.ToString(@"mm\:ss");
+        public string TimeDisplay
+        {
+            get
+            {
+                var seconds = (long)(_phase is MatchPhase.GoldenScore or MatchPhase.GoldenScoreFinished
+                    ? Math.Floor(_clock.Elapsed.TotalSeconds)
+                    : Math.Max(0, Math.Ceiling((_regulationDuration - _clock.Elapsed).TotalSeconds)));
+                return $"{seconds / 60:00}:{seconds % 60:00}";
+            }
+        }
+
+        public bool CanStartGoldenScore => _phase == MatchPhase.RegulationEnded && GetRegulationWinner() is null;
+        public bool ShowGoldenScore => CanStartGoldenScore || _phase is MatchPhase.GoldenScore or MatchPhase.GoldenScoreFinished;
+        public bool CanUndoGoldenScore => _undoGoldenScoreResult is not null;
+        public bool ShowDurationControls => _phase == MatchPhase.Regulation;
+        private bool CanEditScore => _phase is not (MatchPhase.Finished or MatchPhase.GoldenScoreFinished);
 
         public bool IsRunning
         {
             get => _isRunning;
-            set
+            private set
             {
                 _isRunning = value;
                 OnPropertyChanged();
@@ -61,27 +82,34 @@ namespace BjjScoreboard
         public ICommand PauseCommand { get; }
         public ICommand TogglePauseCommand { get; }
         public ICommand ResetCommand { get; }
+        public ICommand StartGoldenScoreCommand { get; }
+        public ICommand UndoGoldenScoreCommand { get; }
 
         public MainViewModel()
         {
             // Сначала загружаем команды из файла или дефолтные
             LoadTeams();
 
-            RedFighter = new FighterViewModel(true, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
-            BlueFighter = new FighterViewModel(false, ThisFighterPenalized, ExecuteSubLogic, ExecuteDqLogic);
+            RedFighter = CreateFighter();
+            BlueFighter = CreateFighter();
 
             ResetMatchTime();
 
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(1);
-            _timer.Tick += Timer_Tick;
+            _timer.Interval = TimeSpan.FromMilliseconds(100);
+            _timer.Tick += (_, _) => UpdateClock();
 
             ModifyMatchDurationCmd = new RelayCommand(p => MatchDurationMinutes += Convert.ToInt32(p));
             StartCommand = new RelayCommand(_ => StartTimer());
             PauseCommand = new RelayCommand(_ => PauseTimer());
             TogglePauseCommand = new RelayCommand(_ => ToggleTimer());
             ResetCommand = new RelayCommand(_ => ResetMatch());
+            StartGoldenScoreCommand = new RelayCommand(_ => StartGoldenScore(), () => CanStartGoldenScore);
+            UndoGoldenScoreCommand = new RelayCommand(_ => UndoGoldenScoreResult(), () => CanUndoGoldenScore);
         }
+
+        private FighterViewModel CreateFighter() =>
+            new(RecordScoreChange, () => CanEditScore, ChangePenalty, FinishByStoppage, ExecuteDqLogic);
 
         private void LoadTeams()
         {
@@ -125,102 +153,202 @@ namespace BjjScoreboard
             Teams.Insert(0, "");
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void UpdateClock()
         {
-            if (_timeRemaining > TimeSpan.Zero)
+            if (_phase == MatchPhase.Regulation && _clock.Elapsed >= _regulationDuration)
             {
-                _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1));
-                OnPropertyChanged(nameof(TimeDisplay));
+                PauseTimer();
+                _phase = MatchPhase.RegulationEnded;
+                RefreshRegulationResult();
             }
             else
             {
-                _timer.Stop();
-                IsRunning = false;
-                DetermineWinnerByPoints();
+                OnPropertyChanged(nameof(TimeDisplay));
             }
         }
 
-        private void StartTimer() { _timer.Start(); IsRunning = true; }
-        private void PauseTimer() { _timer.Stop(); IsRunning = false; }
-        private void ToggleTimer() { if (IsRunning) PauseTimer(); else StartTimer(); }
+        private void StartTimer()
+        {
+            if (CanStartGoldenScore)
+            {
+                StartGoldenScore();
+                return;
+            }
+
+            if (_phase is not (MatchPhase.Regulation or MatchPhase.GoldenScore) || IsRunning) return;
+            _clock.Start();
+            _timer.Start();
+            IsRunning = true;
+        }
+
+        private void PauseTimer()
+        {
+            _clock.Stop();
+            _timer.Stop();
+            IsRunning = false;
+            OnPropertyChanged(nameof(TimeDisplay));
+        }
+
+        private void ToggleTimer()
+        {
+            if (IsRunning)
+            {
+                PauseTimer();
+                UpdateClock();
+            }
+            else StartTimer();
+        }
+
+        private void StartGoldenScore()
+        {
+            if (!CanStartGoldenScore) return;
+            _phase = MatchPhase.GoldenScore;
+            _clock.Reset();
+            StartTimer();
+            NotifyMatchState();
+        }
 
         private void ResetMatchTime()
         {
-            _timeRemaining = TimeSpan.FromMinutes(MatchDurationMinutes);
+            _clock.Reset();
+            _regulationDuration = TimeSpan.FromMinutes(MatchDurationMinutes);
             OnPropertyChanged(nameof(TimeDisplay));
         }
 
         private void ResetMatch()
         {
-            _timer.Stop();
-            IsRunning = false;
+            PauseTimer();
+            _phase = MatchPhase.Regulation;
+            _undoGoldenScoreResult = null;
             ResetMatchTime();
             RedFighter.Reset();
             BlueFighter.Reset();
+            NotifyMatchState();
         }
 
-        private void ThisFighterPenalized(bool isRed)
+        private void RecordScoreChange(Action change)
         {
-            FighterViewModel offender = isRed ? RedFighter : BlueFighter;
-            FighterViewModel opponent = isRed ? BlueFighter : RedFighter;
+            if (!CanEditScore) return;
 
-            switch (offender.Penalties)
+            if (_phase == MatchPhase.GoldenScore)
             {
-                case 2: opponent.Advantages += 1; break;
-                case 3: opponent.Points += 2; break;
-                case 4: ExecuteDqLogic(offender); break;
+                var redScore = FighterScore.Capture(RedFighter);
+                var blueScore = FighterScore.Capture(BlueFighter);
+                change();
+
+                if (_phase == MatchPhase.GoldenScore)
+                {
+                    if (redScore.HasIncreased(RedFighter)) DeclareWinner(RedFighter);
+                    else if (blueScore.HasIncreased(BlueFighter)) DeclareWinner(BlueFighter);
+                }
+
+                if (_phase == MatchPhase.GoldenScoreFinished)
+                {
+                    _undoGoldenScoreResult = () =>
+                    {
+                        redScore.Restore(RedFighter);
+                        blueScore.Restore(BlueFighter);
+                    };
+                    NotifyMatchState();
+                }
+                return;
             }
+
+            change();
+            if (_phase == MatchPhase.RegulationEnded) RefreshRegulationResult();
+            else if (_phase == MatchPhase.Finished) NotifyMatchState();
         }
 
-        private void ExecuteSubLogic(FighterViewModel submissionWinner)
+        private void UndoGoldenScoreResult()
         {
-            _timer.Stop();
-            IsRunning = false;
-            FighterViewModel loser = (submissionWinner == RedFighter) ? BlueFighter : RedFighter;
-            submissionWinner.Points = 50;
-            loser.Points = 0;
-            ApplyColors(submissionWinner);
+            if (_undoGoldenScoreResult is null) return;
+            _undoGoldenScoreResult();
+            _undoGoldenScoreResult = null;
+            _phase = MatchPhase.GoldenScore;
+            ApplyColors(null);
+            NotifyMatchState();
         }
 
-        private void ExecuteDqLogic(FighterViewModel penalizedFighter)
+        private void ChangePenalty(FighterViewModel offender, int change)
         {
-            _timer.Stop();
-            IsRunning = false;
-            FighterViewModel winner = (penalizedFighter == RedFighter) ? BlueFighter : RedFighter;
-            penalizedFighter.Points = 0;
+            var previous = offender.Penalties;
+            var current = Math.Clamp(previous + change, 0, 4);
+            if (previous == current) return;
+
+            var opponent = OpponentOf(offender);
+            offender.Penalties = current;
+            if (previous < 2 && current >= 2) opponent.Advantages++;
+            if (previous < 3 && current >= 3) opponent.Points += 2;
+            if (previous >= 2 && current < 2) opponent.Advantages--;
+            if (previous >= 3 && current < 3) opponent.Points -= 2;
+            if (current == 4) ExecuteDqLogic(offender);
+        }
+
+        private void FinishByStoppage(FighterViewModel winner)
+        {
             winner.Points = 50;
-            ApplyColors(winner);
+            OpponentOf(winner).Points = 0;
+            DeclareWinner(winner);
         }
+
+        private FighterViewModel OpponentOf(FighterViewModel fighter) => fighter == RedFighter ? BlueFighter : RedFighter;
+
+        private void ExecuteDqLogic(FighterViewModel penalizedFighter) => FinishByStoppage(OpponentOf(penalizedFighter));
 
         private void DeclareWinner(FighterViewModel winner)
         {
-            _timer.Stop();
-            IsRunning = false;
+            PauseTimer();
+            _phase = _phase == MatchPhase.GoldenScore ? MatchPhase.GoldenScoreFinished : MatchPhase.Finished;
             ApplyColors(winner);
         }
 
-        private void ApplyColors(FighterViewModel winner)
+        private void ApplyColors(FighterViewModel? winner)
         {
-            if (winner == RedFighter)
-            {
-                RedFighter.RowBackground = "#24A148";
-                BlueFighter.RowBackground = "#393939";
-            }
-            else
-            {
-                BlueFighter.RowBackground = "#24A148";
-                RedFighter.RowBackground = "#393939";
-            }
+            RedFighter.RowBackground = ResultColor(RedFighter);
+            BlueFighter.RowBackground = ResultColor(BlueFighter);
+
+            string ResultColor(FighterViewModel fighter) =>
+                winner is null ? FighterViewModel.DefaultRowBackground : winner == fighter ? "#24A148" : "#393939";
         }
 
-        private void DetermineWinnerByPoints()
+        private FighterViewModel? GetRegulationWinner()
         {
-            if (RedFighter.Points > BlueFighter.Points) DeclareWinner(RedFighter);
-            else if (BlueFighter.Points > RedFighter.Points) DeclareWinner(BlueFighter);
-            else if (RedFighter.Advantages > BlueFighter.Advantages) DeclareWinner(RedFighter);
-            else if (BlueFighter.Advantages > RedFighter.Advantages) DeclareWinner(BlueFighter);
-            else if (RedFighter.Penalties < BlueFighter.Penalties) DeclareWinner(RedFighter);
-            else if (BlueFighter.Penalties < RedFighter.Penalties) DeclareWinner(BlueFighter);
+            if (RedFighter.Points != BlueFighter.Points)
+                return RedFighter.Points > BlueFighter.Points ? RedFighter : BlueFighter;
+            if (RedFighter.Advantages != BlueFighter.Advantages)
+                return RedFighter.Advantages > BlueFighter.Advantages ? RedFighter : BlueFighter;
+            return null;
+        }
+
+        private void RefreshRegulationResult()
+        {
+            ApplyColors(GetRegulationWinner());
+            NotifyMatchState();
+        }
+
+        private void NotifyMatchState()
+        {
+            OnPropertyChanged(nameof(TimeDisplay));
+            OnPropertyChanged(nameof(CanStartGoldenScore));
+            OnPropertyChanged(nameof(ShowGoldenScore));
+            OnPropertyChanged(nameof(CanUndoGoldenScore));
+            OnPropertyChanged(nameof(ShowDurationControls));
+            CommandManager.InvalidateRequerySuggested();
+        }
+
+        private readonly record struct FighterScore(int Points, int Advantages, int Penalties)
+        {
+            public static FighterScore Capture(FighterViewModel fighter) =>
+                new(fighter.Points, fighter.Advantages, fighter.Penalties);
+
+            public bool HasIncreased(FighterViewModel fighter) => fighter.Points > Points || fighter.Advantages > Advantages;
+
+            public void Restore(FighterViewModel fighter)
+            {
+                fighter.Points = Points;
+                fighter.Advantages = Advantages;
+                fighter.Penalties = Penalties;
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -235,12 +363,8 @@ namespace BjjScoreboard
         private int _points;
         private int _advantages;
         private int _penalties;
-        private string _rowBackground = "#172637";
-
-        private readonly Action<bool> _onPenaltyChanged;
-        private readonly Action<FighterViewModel> _onSubTriggered;
-        private readonly Action<FighterViewModel> _onDqTriggered;
-        private readonly bool _isRed;
+        internal const string DefaultRowBackground = "#172637";
+        private string _rowBackground = DefaultRowBackground;
 
         public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
         public string Team { get => _team; set { _team = value ?? ""; OnPropertyChanged(); } }
@@ -255,30 +379,21 @@ namespace BjjScoreboard
         public ICommand WinBySubCmd { get; }
         public ICommand WinByDqCmd { get; }
 
-        public FighterViewModel(bool isRed, Action<bool> onPenaltyChanged, Action<FighterViewModel> onSubTriggered, Action<FighterViewModel> onDqTriggered)
+        public FighterViewModel(
+            Action<Action> recordScoreChange,
+            Func<bool> canEditScore,
+            Action<FighterViewModel, int> changePenalty,
+            Action<FighterViewModel> onSubmission,
+            Action<FighterViewModel> onDisqualification)
         {
-            _isRed = isRed;
-            _onPenaltyChanged = onPenaltyChanged;
-            _onSubTriggered = onSubTriggered;
-            _onDqTriggered = onDqTriggered;
+            ModifyPointsCmd = ScoreCommand(p => Points += Convert.ToInt32(p));
+            ModifyAdvantagesCmd = ScoreCommand(p => Advantages += Convert.ToInt32(p));
+            ModifyPenaltiesCmd = ScoreCommand(p => changePenalty(this, Convert.ToInt32(p)));
+            WinBySubCmd = ScoreCommand(_ => onSubmission(this));
+            WinByDqCmd = ScoreCommand(_ => onDisqualification(this));
 
-            ModifyPointsCmd = new RelayCommand(p => Points += Convert.ToInt32(p));
-            ModifyAdvantagesCmd = new RelayCommand(p => Advantages += Convert.ToInt32(p));
-            ModifyPenaltiesCmd = new RelayCommand(p => {
-                int diff = Convert.ToInt32(p);
-                if (diff > 0 && Penalties < 4)
-                {
-                    Penalties++;
-                    _onPenaltyChanged(_isRed);
-                }
-                else if (diff < 0 && Penalties > 0)
-                {
-                    Penalties--;
-                }
-            });
-
-            WinBySubCmd = new RelayCommand(_ => _onSubTriggered(this));
-            WinByDqCmd = new RelayCommand(_ => _onDqTriggered(this));
+            ICommand ScoreCommand(Action<object?> change) =>
+                new RelayCommand(p => recordScoreChange(() => change(p)), canEditScore);
         }
 
         public void Reset()
@@ -288,7 +403,7 @@ namespace BjjScoreboard
             Points = 0;
             Advantages = 0;
             Penalties = 0;
-            RowBackground = "#172637";
+            RowBackground = DefaultRowBackground;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -298,10 +413,26 @@ namespace BjjScoreboard
 
     public class RelayCommand : ICommand
     {
-        private readonly Action<object> _execute;
-        public RelayCommand(Action<object> execute) => _execute = execute;
-        public bool CanExecute(object parameter) => true;
-        public void Execute(object parameter) => _execute(parameter);
-        public event EventHandler CanExecuteChanged { add { } remove { } }
+        private readonly Action<object?> _execute;
+        private readonly Func<bool>? _canExecute;
+
+        public RelayCommand(Action<object?> execute, Func<bool>? canExecute = null)
+        {
+            _execute = execute;
+            _canExecute = canExecute;
+        }
+
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
+
+        public void Execute(object? parameter)
+        {
+            if (CanExecute(parameter)) _execute(parameter);
+        }
+
+        public event EventHandler? CanExecuteChanged
+        {
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
+        }
     }
 }
