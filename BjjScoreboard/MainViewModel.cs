@@ -19,6 +19,7 @@ namespace BjjScoreboard
         private MatchPhase _phase;
         private TimeSpan _regulationDuration;
         private Action? _undoGoldenScoreResult;
+        private FighterViewModel? _winner;
         private int _matchDurationMinutes = 5;
         private bool _isRunning;
         private string _selectedGender = "Мужчины";
@@ -62,6 +63,9 @@ namespace BjjScoreboard
         public bool ShowGoldenScore => CanStartGoldenScore || _phase is MatchPhase.GoldenScore or MatchPhase.GoldenScoreFinished;
         public bool CanUndoGoldenScore => _undoGoldenScoreResult is not null;
         public bool ShowDurationControls => _phase == MatchPhase.Regulation;
+        public bool HasWinner => _winner is not null;
+        public string WinnerText => _winner is null ? "" : _winner == RedFighter ? "WINNER RED" : "WINNER BLUE";
+        public string WinnerColor => _winner == RedFighter ? "#DC143C" : "#0F62FE";
         private bool CanEditScore => _phase is not (MatchPhase.Finished or MatchPhase.GoldenScoreFinished);
 
         public bool IsRunning
@@ -223,6 +227,7 @@ namespace BjjScoreboard
             ResetMatchTime();
             RedFighter.Reset();
             BlueFighter.Reset();
+            ApplyResult(null);
             NotifyMatchState();
         }
 
@@ -265,7 +270,7 @@ namespace BjjScoreboard
             _undoGoldenScoreResult();
             _undoGoldenScoreResult = null;
             _phase = MatchPhase.GoldenScore;
-            ApplyColors(null);
+            ApplyResult(null);
             NotifyMatchState();
         }
 
@@ -299,13 +304,18 @@ namespace BjjScoreboard
         {
             PauseTimer();
             _phase = _phase == MatchPhase.GoldenScore ? MatchPhase.GoldenScoreFinished : MatchPhase.Finished;
-            ApplyColors(winner);
+            ApplyResult(winner);
         }
 
-        private void ApplyColors(FighterViewModel? winner)
+        private void ApplyResult(FighterViewModel? winner)
         {
+            if (_winner == winner) return;
+            _winner = winner;
             RedFighter.RowBackground = ResultColor(RedFighter);
             BlueFighter.RowBackground = ResultColor(BlueFighter);
+            OnPropertyChanged(nameof(WinnerText));
+            OnPropertyChanged(nameof(WinnerColor));
+            OnPropertyChanged(nameof(HasWinner));
 
             string ResultColor(FighterViewModel fighter) =>
                 winner is null ? FighterViewModel.DefaultRowBackground : winner == fighter ? "#24A148" : "#393939";
@@ -322,7 +332,7 @@ namespace BjjScoreboard
 
         private void RefreshRegulationResult()
         {
-            ApplyColors(GetRegulationWinner());
+            ApplyResult(GetRegulationWinner());
             NotifyMatchState();
         }
 
