@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets/Sounds/dzin-short.wav" LogicalName="BjjScoreboard.MatchEndSound.wav" />
     <Content Include="kimono.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory Condition="'$(PublishSingleFile)' == 'true'">Never</CopyToPublishDirectory>

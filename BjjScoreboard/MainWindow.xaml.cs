@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Media;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 
@@ -7,11 +8,27 @@ namespace BjjScoreboard
 {
     public partial class MainWindow : Window
     {
+        private readonly SoundPlayer _matchEndSound;
+
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = new MainViewModel();
+            var soundStream = typeof(MainWindow).Assembly.GetManifestResourceStream("BjjScoreboard.MatchEndSound.wav")
+                ?? throw new InvalidOperationException("The embedded match-end sound is missing.");
+            _matchEndSound = new SoundPlayer(soundStream);
+            _matchEndSound.Load();
+
+            var viewModel = new MainViewModel();
+            viewModel.StopSignalRequested += (_, _) => _matchEndSound.Play();
+            DataContext = viewModel;
             this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _matchEndSound.Stream?.Dispose();
+            _matchEndSound.Dispose();
+            base.OnClosed(e);
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)

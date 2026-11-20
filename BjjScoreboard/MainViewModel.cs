@@ -88,6 +88,7 @@ namespace BjjScoreboard
         public ICommand ResetCommand { get; }
         public ICommand StartGoldenScoreCommand { get; }
         public ICommand UndoGoldenScoreCommand { get; }
+        public event EventHandler? StopSignalRequested;
 
         public MainViewModel()
         {
@@ -164,6 +165,7 @@ namespace BjjScoreboard
                 PauseTimer();
                 _phase = MatchPhase.RegulationEnded;
                 RefreshRegulationResult();
+                StopSignalRequested?.Invoke(this, EventArgs.Empty);
             }
             else
             {
@@ -305,6 +307,7 @@ namespace BjjScoreboard
             PauseTimer();
             _phase = _phase == MatchPhase.GoldenScore ? MatchPhase.GoldenScoreFinished : MatchPhase.Finished;
             ApplyResult(winner);
+            StopSignalRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void ApplyResult(FighterViewModel? winner)
